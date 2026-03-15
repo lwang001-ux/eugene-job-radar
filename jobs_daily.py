@@ -151,6 +151,7 @@ def send_email(creative, maker, school, museum):
     html += "</body></html>"
 
     msg = MIMEText(html, "html")
+    body = "\nLive Job Dashboard:\nhttps://lwang001-ux.github.io/eugene-job-radar/\n\n" + body
 
     msg["Subject"] = "Southern California Creative + Maker Jobs"
     msg["From"] = EMAIL_FROM
