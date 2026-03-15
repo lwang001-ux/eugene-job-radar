@@ -74,7 +74,7 @@ MUSEUM_QUERIES = [
 def search_google_jobs(query):
 
     params = {
-        "engine": "google_jobs",
+        "engine": "google_jobs", "hl": "en", "gl": "us", "location": "California, United States",
         "q": query,
         "api_key": SERPAPI_API_KEY
     }
