@@ -1,3 +1,5 @@
+from save_dashboard_jobs import save_jobs
+from dashboard_builder import build_dashboard
 import os
 import requests
 from dotenv import load_dotenv
@@ -176,6 +178,7 @@ if __name__ == "__main__":
     museum = run_queries(MUSEUM_QUERIES)
 
     all_jobs = creative + maker + school + museum
+    save_jobs(all_jobs)
     build_dashboard(all_jobs)
 
     print("Sending email...")
