@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,10 +8,10 @@
 <style>
 
 body{
-background:#fbf7ef;
+background:#faf6ee;
 font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
-padding:30px;
-color:#1f2937;
+padding:40px;
+color:#243042;
 }
 
 .layout{
@@ -22,58 +21,78 @@ gap:30px;
 align-items:start;
 }
 
+h1{
+font-weight:300;
+letter-spacing:.3px;
+margin-bottom:10px;
+}
+
+.instructions{
+font-family:Menlo, Monaco, monospace;
+font-size:15px;
+color:#b45353;
+opacity:.65;
+margin-bottom:30px;
+}
+
 .job,.sidebar-card{
 background:white;
 border-radius:12px;
-padding:20px;
-border:1px solid #e5e7eb;
+padding:24px;
+border:1px solid #ece9e1;
 margin-bottom:20px;
 }
 
-h1{
-font-weight:300;
-}
-
 button,a.btn{
-padding:10px 14px;
+padding:10px 16px;
 border-radius:8px;
-border:none;
+border:1px solid #d7dbe3;
+background:white;
 cursor:pointer;
 margin-right:10px;
 text-decoration:none;
 display:inline-block;
-font-family:Courier, monospace;
+font-family:Menlo, Monaco, monospace;
+font-size:14px;
+color:#2c3a55;
+transition:.2s;
+}
+
+button:hover,a.btn:hover{
+border-color:#1e3a8a;
+color:#1e3a8a;
 }
 
 .primary{
-background:#1e3a8a;
-color:white;
+border-color:#1e3a8a;
+color:#1e3a8a;
 }
 
 .secondary{
-background:#fca5a5;
-color:#7f1d1d;
+border-color:#e9b4b4;
+color:#a43d3d;
 }
 
 textarea{
 width:100%;
 min-height:160px;
-margin-top:10px;
+margin-top:14px;
 border-radius:8px;
-border:1px solid #d1d5db;
-padding:10px;
+border:1px solid #e5e7eb;
+padding:12px;
 font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.instructions{
-font-family:Courier, monospace;
-color:#7f1d1d;
-margin-top:10px;
+.saved-meta{
+color:#7b8594;
+font-size:14px;
+margin-top:6px;
 }
 
-.saved-meta{
-color:#6b7280;
+.count{
 font-size:14px;
+color:#7b8594;
+margin-bottom:10px;
 }
 
 @media(max-width:900px){
@@ -102,6 +121,7 @@ font-size:14px;
 <div class="sidebar-card">
 
 <h2>Saved Jobs</h2>
+<div class="count" id="savedCount"></div>
 
 <div id="savedJobs"></div>
 
@@ -114,7 +134,7 @@ font-size:14px;
 
 <script>
 
-const SAVED_KEY="savedJobsV3"
+const SAVED_KEY="savedJobsV4"
 
 function loadSaved(){
 return JSON.parse(localStorage.getItem(SAVED_KEY)||"[]")
@@ -132,21 +152,22 @@ function saveJob(job){
 
 let saved=loadSaved()
 
-if(saved.find(x=>x.id===jobId(job))){
+let id=jobId(job)
+
+if(saved.find(x=>x.id===id)){
 alert("Already saved")
 return
 }
 
 saved.push({
-id:jobId(job),
+id:id,
 title:job.title,
 company:job.company,
 location:job.location,
 link:job.link,
 savedDate:new Date().toLocaleDateString(),
 applied:false,
-appliedDate:"",
-letter:""
+appliedDate:""
 })
 
 saveSaved(saved)
@@ -181,21 +202,19 @@ renderSaved()
 
 }
 
-
 function generateLetter(job){
 
 return `Dear ${job.company},
 
 I am excited to apply for the ${job.title} role in ${job.location}.
 
-My background combines strong visual design, creative thinking, and experience collaborating with teams and students.
+My background combines strong visual design, creative thinking, and experience collaborating with teams.
 
 I would welcome the opportunity to contribute my skills and learn more about your work.
 
 Sincerely,
 Eugene Wang`
 }
-
 
 function showLetter(button,job){
 
@@ -204,7 +223,7 @@ let wrap=button.closest(".job").querySelector(".letterWrap")
 let letter=generateLetter(job)
 
 wrap.innerHTML=`
-<div class="instructions">Edit the letter below. You can copy, save, or delete it.</div>
+<div class="instructions">Edit the letter below. Export or delete when finished.</div>
 
 <textarea>${letter}</textarea>
 
@@ -241,7 +260,6 @@ btn.parentElement.innerHTML=""
 
 }
 
-
 function renderJobs(data){
 
 let container=document.getElementById("jobs")
@@ -276,12 +294,15 @@ container.appendChild(div)
 
 }
 
-
 function renderSaved(){
 
 let container=document.getElementById("savedJobs")
 
+let count=document.getElementById("savedCount")
+
 let saved=loadSaved()
+
+count.innerText=saved.length+" saved"
 
 container.innerHTML=""
 
@@ -315,11 +336,7 @@ ${job.applied?"Resume + Cover Letter Sent":"Mark Resume + Cover Letter Sent"}
 
 </button>
 
-<button class="secondary" onclick="deleteSaved('${job.id}')">
-
-Delete
-
-</button>
+<button class="secondary" onclick="deleteSaved('${job.id}')">Delete</button>
 
 <div class="saved-meta">
 
@@ -335,25 +352,15 @@ container.appendChild(div)
 
 }
 
-
 fetch("dashboard_jobs.json")
-
 .then(r=>r.json())
-
 .then(data=>{
-
 renderJobs(data)
-
 renderSaved()
-
 })
-
 .catch(()=>{
-
 renderSaved()
-
 })
-
 
 </script>
 
