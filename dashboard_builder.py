@@ -31,6 +31,8 @@ def build_dashboard(jobs):
         {j.get('company','')}<br>
         {j.get('location','')}<br>
         <a href="{j.get('link','')}">View Job</a>
+        <br><br>
+        ⭐ Save | Generate Cover Letter
         </div>
         """
 
