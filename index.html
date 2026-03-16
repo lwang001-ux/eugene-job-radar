@@ -352,7 +352,7 @@ container.appendChild(div)
 
 }
 
-fetch("dashboard_jobs.json")
+fetch("data/dashboard_jobs.json")
 .then(r=>r.json())
 .then(data=>{
 renderJobs(data)
