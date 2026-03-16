@@ -1,174 +1,361 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SoCal Creative Job Bot</title>
-  <style>
-    body{font-family:Arial;background:#f5f7fb;padding:28px;color:#1f2937}
-    .layout{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
-    .job,.sidebar-card{background:white;padding:18px;border-radius:12px;border:1px solid #dbe3ef;margin-bottom:16px}
-    button,a.btn{margin-right:10px;padding:8px 12px;border-radius:8px;border:none;background:#2563eb;color:white;cursor:pointer;text-decoration:none;display:inline-block}
-    .secondary{background:#eef4ff;color:#2563eb}
-    textarea{width:100%;min-height:140px;border:1px solid #dbe3ef;border-radius:10px;padding:10px;font:inherit}
-    .muted{color:#6b7280}
-    @media (max-width:980px){.layout{grid-template-columns:1fr}}
-  </style>
-</head>
-<body>
-  <div class="layout">
-    <main>
-      <h1>Southern California Creative + Maker Job Radar</h1>
-      <p class="muted">Save favorites, track sent applications, and generate editable cover letters.</p>
-      <div id="jobs"></div>
-    </main>
-    <aside>
-      <div class="sidebar-card">
-        <h2>Saved Jobs</h2>
-        <p class="muted">Saved in this browser on this device.</p>
-        <div id="savedJobs"></div>
-      </div>
-    </aside>
-  </div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoCal Creative Job Bot</title>
 
-<script>
-const DASHBOARD_FILE = "dashboard_jobs.json";
-const SAVED_KEY = "savedJobsV2";
+<style>
 
-function loadSaved(){
-  try { return JSON.parse(localStorage.getItem(SAVED_KEY) || "[]"); }
-  catch(e){ return []; }
+body{
+background:#fbf7ef;
+font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+padding:30px;
+color:#1f2937;
 }
 
-function saveSaved(items){
-  localStorage.setItem(SAVED_KEY, JSON.stringify(items));
+.layout{
+display:grid;
+grid-template-columns:1fr 360px;
+gap:30px;
+align-items:start;
+}
+
+.job,.sidebar-card{
+background:white;
+border-radius:12px;
+padding:20px;
+border:1px solid #e5e7eb;
+margin-bottom:20px;
+}
+
+h1{
+font-weight:300;
+}
+
+button,a.btn{
+padding:10px 14px;
+border-radius:8px;
+border:none;
+cursor:pointer;
+margin-right:10px;
+text-decoration:none;
+display:inline-block;
+font-family:Courier, monospace;
+}
+
+.primary{
+background:#1e3a8a;
+color:white;
+}
+
+.secondary{
+background:#fca5a5;
+color:#7f1d1d;
+}
+
+textarea{
+width:100%;
+min-height:160px;
+margin-top:10px;
+border-radius:8px;
+border:1px solid #d1d5db;
+padding:10px;
+font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.instructions{
+font-family:Courier, monospace;
+color:#7f1d1d;
+margin-top:10px;
+}
+
+.saved-meta{
+color:#6b7280;
+font-size:14px;
+}
+
+@media(max-width:900px){
+.layout{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+<main>
+
+<h1>Southern California Creative + Maker Job Radar</h1>
+<p class="instructions">Save favorites. Track submitted applications. Generate and edit cover letters.</p>
+
+<div id="jobs"></div>
+
+</main>
+
+
+<aside>
+
+<div class="sidebar-card">
+
+<h2>Saved Jobs</h2>
+
+<div id="savedJobs"></div>
+
+</div>
+
+</aside>
+
+</div>
+
+
+<script>
+
+const SAVED_KEY="savedJobsV3"
+
+function loadSaved(){
+return JSON.parse(localStorage.getItem(SAVED_KEY)||"[]")
+}
+
+function saveSaved(data){
+localStorage.setItem(SAVED_KEY,JSON.stringify(data))
 }
 
 function jobId(job){
-  return [job.title||"", job.company||"", job.location||"", job.link||""].join(" | ");
+return job.title+"-"+job.company+"-"+job.location
 }
 
 function saveJob(job){
-  const saved = loadSaved();
-  const id = jobId(job);
-  if (saved.find(x => x.id === id)) {
-    alert("This job is already saved.");
-    return;
-  }
-  saved.push({
-    id:id,
-    title:job.title||"",
-    company:job.company||"",
-    location:job.location||"",
-    link:job.link||"",
-    savedAt:new Date().toLocaleString(),
-    applied:false,
-    appliedDate:"",
-    notes:""
-  });
-  saveSaved(saved);
-  renderSavedJobs();
-  alert("Saved ⭐");
+
+let saved=loadSaved()
+
+if(saved.find(x=>x.id===jobId(job))){
+alert("Already saved")
+return
 }
 
-function removeSaved(id){
-  const saved = loadSaved().filter(x => x.id !== id);
-  saveSaved(saved);
-  renderSavedJobs();
+saved.push({
+id:jobId(job),
+title:job.title,
+company:job.company,
+location:job.location,
+link:job.link,
+savedDate:new Date().toLocaleDateString(),
+applied:false,
+appliedDate:"",
+letter:""
+})
+
+saveSaved(saved)
+
+renderSaved()
+
 }
 
 function toggleApplied(id){
-  const saved = loadSaved();
-  const item = saved.find(x => x.id === id);
-  if (!item) return;
-  item.applied = !item.applied;
-  item.appliedDate = item.applied ? new Date().toLocaleDateString() : "";
-  saveSaved(saved);
-  renderSavedJobs();
+
+let saved=loadSaved()
+
+let item=saved.find(x=>x.id===id)
+
+item.applied=!item.applied
+
+item.appliedDate=item.applied?new Date().toLocaleDateString():""
+
+saveSaved(saved)
+
+renderSaved()
+
 }
 
-function updateNotes(id, value){
-  const saved = loadSaved();
-  const item = saved.find(x => x.id === id);
-  if (!item) return;
-  item.notes = value;
-  saveSaved(saved);
+function deleteSaved(id){
+
+let saved=loadSaved().filter(x=>x.id!==id)
+
+saveSaved(saved)
+
+renderSaved()
+
 }
 
-function generateCoverLetter(job){
-  return `Dear ${job.company || "Hiring Team"},
 
-I am excited to apply for the ${job.title || "position"} role${job.company ? " at " + job.company : ""}${job.location ? " in " + job.location : ""}.
+function generateLetter(job){
 
-My background combines strong visual design, creativity, and experience working with students and collaborative teams. I would be excited to contribute thoughtful ideas, strong communication, and a hands-on approach to this role.
+return `Dear ${job.company},
 
-I would welcome the opportunity to discuss how my experience and interests align with your needs.
+I am excited to apply for the ${job.title} role in ${job.location}.
+
+My background combines strong visual design, creative thinking, and experience collaborating with teams and students.
+
+I would welcome the opportunity to contribute my skills and learn more about your work.
 
 Sincerely,
-Eugene Wang`;
+Eugene Wang`
 }
 
-function showLetter(button, job){
-  const wrap = button.closest(".job").querySelector(".letter-wrap");
-  wrap.innerHTML = `<textarea>${generateCoverLetter(job)}</textarea>`;
+
+function showLetter(button,job){
+
+let wrap=button.closest(".job").querySelector(".letterWrap")
+
+let letter=generateLetter(job)
+
+wrap.innerHTML=`
+<div class="instructions">Edit the letter below. You can copy, save, or delete it.</div>
+
+<textarea>${letter}</textarea>
+
+<br><br>
+
+<button class="primary" onclick="exportLetter(this)">Export Letter</button>
+
+<button class="secondary" onclick="deleteLetter(this)">Delete Letter</button>
+`
+
 }
+
+function exportLetter(btn){
+
+let text=btn.parentElement.querySelector("textarea").value
+
+let blob=new Blob([text],{type:"text/plain"})
+
+let url=URL.createObjectURL(blob)
+
+let a=document.createElement("a")
+
+a.href=url
+
+a.download="cover-letter.txt"
+
+a.click()
+
+}
+
+function deleteLetter(btn){
+
+btn.parentElement.innerHTML=""
+
+}
+
 
 function renderJobs(data){
-  const container = document.getElementById("jobs");
-  container.innerHTML = "";
-  if (!data || !data.length) {
-    container.innerHTML = '<div class="job"><p class="muted">No jobs found yet.</p></div>';
-    return;
-  }
 
-  data.forEach(job => {
-    const div = document.createElement("div");
-    div.className = "job";
-    div.innerHTML = `
-      <h3>${job.title || ""}</h3>
-      <p class="muted">${job.company || ""}<br>${job.location || ""}</p>
-      <a class="btn" href="${job.link || "#"}" target="_blank" rel="noopener">View Job</a>
-      <button class="secondary" onclick='saveJob(${JSON.stringify(job)})'>⭐ Save Favorite</button>
-      <button class="secondary" onclick='showLetter(this, ${JSON.stringify(job)})'>✉ Generate Cover Letter</button>
-      <div class="letter-wrap" style="margin-top:12px"></div>
-    `;
-    container.appendChild(div);
-  });
+let container=document.getElementById("jobs")
+
+container.innerHTML=""
+
+data.forEach(job=>{
+
+let div=document.createElement("div")
+
+div.className="job"
+
+div.innerHTML=`
+
+<h3>${job.title}</h3>
+
+<p>${job.company}<br>${job.location}</p>
+
+<a class="btn primary" href="${job.link}" target="_blank">View Job</a>
+
+<button class="secondary" onclick='saveJob(${JSON.stringify(job)})'>⭐ Save Favorite</button>
+
+<button class="secondary" onclick='showLetter(this,${JSON.stringify(job)})'>Generate Cover Letter</button>
+
+<div class="letterWrap"></div>
+
+`
+
+container.appendChild(div)
+
+})
+
 }
 
-function renderSavedJobs(){
-  const container = document.getElementById("savedJobs");
-  const saved = loadSaved();
-  if (!saved.length) {
-    container.innerHTML = '<p class="muted">No saved jobs yet.</p>';
-    return;
-  }
 
-  container.innerHTML = "";
-  saved.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "job";
-    const safeId = item.id.replace(/'/g, "\'");
-    div.innerHTML = `
-      <h3>${item.title}</h3>
-      <p class="muted">${item.company}<br>${item.location}<br>Saved: ${item.savedAt}</p>
-      <a class="btn" href="${item.link}" target="_blank" rel="noopener">Open Job</a>
-      <button class="secondary" onclick="toggleApplied('${safeId}')">${item.applied ? "✅ Resume + Cover Letter Sent" : "Mark Resume + Cover Letter Sent"}</button>
-      <button class="secondary" onclick="removeSaved('${safeId}')">Remove</button>
-      <p class="muted" style="margin-top:10px">${item.applied ? "Sent on: " + item.appliedDate : "Not yet sent"}</p>
-      <div style="margin-top:10px"><strong>Notes</strong></div>
-      <textarea oninput="updateNotes('${safeId}', this.value)">${item.notes || ""}</textarea>
-      <div style="margin-top:10px"><strong>Cover Letter Draft</strong></div>
-      <textarea>${generateCoverLetter(item)}</textarea>
-    `;
-    container.appendChild(div);
-  });
+function renderSaved(){
+
+let container=document.getElementById("savedJobs")
+
+let saved=loadSaved()
+
+container.innerHTML=""
+
+saved.forEach(job=>{
+
+let div=document.createElement("div")
+
+div.className="job"
+
+div.innerHTML=`
+
+<h3>${job.title}</h3>
+
+<div class="saved-meta">
+
+${job.company}<br>
+
+${job.location}<br>
+
+Saved: ${job.savedDate}
+
+</div>
+
+<br>
+
+<a class="btn primary" href="${job.link}" target="_blank">Open Job</a>
+
+<button class="secondary" onclick="toggleApplied('${job.id}')">
+
+${job.applied?"Resume + Cover Letter Sent":"Mark Resume + Cover Letter Sent"}
+
+</button>
+
+<button class="secondary" onclick="deleteSaved('${job.id}')">
+
+Delete
+
+</button>
+
+<div class="saved-meta">
+
+${job.applied?"Submitted: "+job.appliedDate:"Not submitted yet"}
+
+</div>
+
+`
+
+container.appendChild(div)
+
+})
+
 }
 
-fetch(DASHBOARD_FILE)
-  .then(r => r.json())
-  .then(data => { renderJobs(data); renderSavedJobs(); })
-  .catch(() => { renderJobs([]); renderSavedJobs(); });
+
+fetch("dashboard_jobs.json")
+
+.then(r=>r.json())
+
+.then(data=>{
+
+renderJobs(data)
+
+renderSaved()
+
+})
+
+.catch(()=>{
+
+renderSaved()
+
+})
+
+
 </script>
+
 </body>
 </html>
